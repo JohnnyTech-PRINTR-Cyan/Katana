@@ -184,6 +184,30 @@ def setup_environment():
         run([pip_path, "install", "flask", "flaskwebgui", "waitress", "psutil"])
         success("Core dependencies installed")
 
+    # Patch flaskwebgui if Python < 3.12
+    if sys.version_info < (3, 12):
+        step("Patching flaskwebgui for Python < 3.12 compatibility...")
+        try:
+            site_pkgs_cmd = [python_path, "-c", "import site; print(site.getsitepackages()[0])"]
+            site_pkgs = subprocess.check_output(site_pkgs_cmd, text=True).strip()
+            flaskwebgui_path = os.path.join(site_pkgs, "flaskwebgui.py")
+            if os.path.exists(flaskwebgui_path):
+                with open(flaskwebgui_path, 'r') as f:
+                    content = f.read()
+                
+                bad_fstring = 'logger.info(f"Command: {\\" \\".join(self.browser_command)}")'
+                good_code = '_cmd = " ".join(self.browser_command)\\n        logger.info(f"Command: {_cmd}")'
+                
+                if bad_fstring in content:
+                    content = content.replace(bad_fstring, good_code)
+                    with open(flaskwebgui_path, 'w') as f:
+                        f.write(content)
+                    success("flaskwebgui patched successfully")
+                else:
+                    success("flaskwebgui already compatible or patched")
+        except Exception as e:
+            warn(f"Failed to patch flaskwebgui: {e}")
+
 
 # ─── Desktop Integration ─────────────────────────────────────────────────────
 
