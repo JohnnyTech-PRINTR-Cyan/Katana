@@ -28,15 +28,8 @@ SYSTEM = platform.system().lower()
 USERNAME = getpass.getuser()
 HOME = os.path.expanduser("~")
 
-# Install paths per platform
-if SYSTEM == "linux":
-    INSTALL_DIR = os.path.join(HOME, "katana")
-elif SYSTEM == "darwin":
-    INSTALL_DIR = os.path.join(HOME, "katana")
-elif SYSTEM == "windows":
-    INSTALL_DIR = os.path.join(HOME, "katana")
-else:
-    INSTALL_DIR = os.path.join(HOME, "katana")
+# Install paths
+INSTALL_DIR = os.path.dirname(os.path.abspath(__file__))
 
 VENV_DIR = os.path.join(INSTALL_DIR, ".venv")
 APP_DIR = INSTALL_DIR  # The repo itself is the app directory
@@ -136,10 +129,14 @@ def check_prerequisites():
 # ─── Clone Repository ────────────────────────────────────────────────────────
 
 def clone_repo():
-    header("Cloning Repository")
+    header("Checking Repository")
 
-    if os.path.exists(INSTALL_DIR):
-        warn(f"Directory already exists: {INSTALL_DIR}")
+    if os.path.exists(os.path.join(INSTALL_DIR, ".git")):
+        success("Already in a git repository; skipping clone.")
+        return
+
+    if os.path.exists(INSTALL_DIR) and len(os.listdir(INSTALL_DIR)) > 1:
+        warn(f"Directory already exists and is not empty: {INSTALL_DIR}")
         response = input(f"  {color('?', Colors.YELLOW)} Overwrite? [y/N]: ").strip().lower()
         if response in ("y", "yes"):
             step(f"Removing existing directory: {INSTALL_DIR}")
@@ -159,7 +156,7 @@ def setup_environment():
 
     # Create venv
     step("Creating virtual environment...")
-    run([sys.executable, "-m", "venv", VENV_DIR])
+    run(["python3", "-m", "venv", VENV_DIR])
     success("Virtual environment created")
 
     # Determine pip path
@@ -328,9 +325,13 @@ def uninstall():
 
     # Remove install directory
     if os.path.exists(INSTALL_DIR):
-        step(f"Removing {INSTALL_DIR}...")
-        shutil.rmtree(INSTALL_DIR)
-        success("Application directory removed")
+        if os.path.exists(os.path.join(INSTALL_DIR, ".git")):
+            warn(f"Refusing to delete {INSTALL_DIR} because it contains a .git repository.")
+            warn("To uninstall completely, delete the directory manually.")
+        else:
+            step(f"Removing {INSTALL_DIR}...")
+            shutil.rmtree(INSTALL_DIR)
+            success("Application directory removed")
     else:
         warn("Application directory not found")
 
