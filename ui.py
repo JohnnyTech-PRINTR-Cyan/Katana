@@ -14,3 +14,7 @@ def load():
 @app.route('/welcome')
 def welcome():
     return render_template('welcomeflow.html', version=v, page_title="Katana")
+
+@app.route('/printer_setup')
+def printer_setup():
+    return "Printer Setup Page (Coming Soon)"

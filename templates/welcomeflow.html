@@ -1,7 +1,9 @@
 {% extends "load.html" %}
 {% block content %}
+{% set splash_url = url_for('static', filename='splash.jpg') %}
+
 <section class="hero is-fullheight-with-navbar"
-    style="background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('{{ url_for('static', filename='splash.jpg') }}') no-repeat center center; background-size: cover;">
+    style="background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('{{ splash_url }}') no-repeat center center; background-size: cover;">
     <div class="hero-body">
         <div class="container has-text-centered">
             <h1 class="title has-text-white is-size-1 has-text-weight-bold"
