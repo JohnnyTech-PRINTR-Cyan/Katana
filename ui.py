@@ -18,3 +18,4 @@ def welcome():
 @app.route('/printer_setup')
 def printer_setup():
     return "Printer Setup Page (Coming Soon)"
+print("DO NOT RUN THIS SCRIPT DIRECTLY! USE main.py TO RUN KATANA!")
