@@ -8,8 +8,14 @@
                 style="text-shadow: 2px 2px 8px rgba(0,0,0,0.8);">
                 Print awesome.
             </h1>
-            <button class="button is-primary">Get Started</button>
+            <button id="getStartedBtn" class="button is-primary is-large getstarted">Get Started</button>
         </div>
     </div>
+
+    <script>
+        document.getElementById('getStartedBtn').addEventListener('click', function () {
+            window.location.href = "{{ url_for('printer_setup') }}";
+        });
+    </script>
 </section>
 {% endblock %}
