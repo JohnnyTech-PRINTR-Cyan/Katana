@@ -3,6 +3,7 @@
         {
             "name": "Ender 3",
             "manufacturer": "Creality",
+            "ip_address": "",
             "bed_size": [235, 235, 250],
             "nozzle_size": 0.4,
             "hotend_temp": {
@@ -31,6 +32,7 @@
         {
             "name": "Prusa i3 MK3S+",
             "manufacturer": "Prusa Research",
+            "ip_address": "",
             "bed_size": [250, 210, 210],
             "nozzle_size": 0.4,
             "hotend_temp": {
@@ -59,6 +61,7 @@
         {
             "name": "Ultimaker S5",
             "manufacturer": "Ultimaker",
+            "ip_address": "",
             "bed_size": [330, 240, 300],
             "nozzle_size": 0.4,
             "hotend_temp": {
@@ -87,6 +90,7 @@
         {
             "name": "Bambu Lab A1 Mini",
             "manufacturer": "Bambu Lab",
+            "ip_address": "",
             "bed_size": [256, 256, 250],
             "nozzle_size": 0.4,
             "hotend_temp": {

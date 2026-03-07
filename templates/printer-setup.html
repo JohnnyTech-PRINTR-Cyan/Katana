@@ -20,6 +20,24 @@
                         <div class="card-content">
                             <h3 class="title is-5 has-text-white">{{ profile.name }}</h3>
                             <p class="has-text-light">{{ profile.manufacturer }}</p>
+                            <div class="field">
+                                <label class="label has-text-white is-size-7">IP Address</label>
+                                <div class="control has-icons-right">
+                                    <input class="input is-small" type="text" 
+                                           id="prebuilt-ip-{{ loop.index0 }}" 
+                                           value="{{ profile.ip_address or '' }}" 
+                                           placeholder="192.168.1.100" 
+                                           pattern="^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$" 
+                                           title="Enter a valid IP address (e.g., 192.168.1.100)"
+                                           onclick="event.stopPropagation()"
+                                           onchange="updateIpIndicator('{{ loop.index0 }}')">
+                                    {% if profile.ip_address %}
+                                    <span class="icon is-small is-right has-text-success">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
                             <div class="tags">
                                 <span class="tag is-primary">{{ profile.bed_size[0] }}x{{ profile.bed_size[1] }}x{{ profile.bed_size[2] }}mm</span>
                                 <span class="tag is-info">{{ profile.nozzle_size }}mm nozzle</span>
@@ -36,9 +54,9 @@
     <div class="columns">
         <div class="column is-12">
             <h2 class="title is-4 has-text-white">Custom Printer Profile</h2>
-            <button class="button is-success" onclick="toggleCustomForm()">Add Custom Profile</button>
+            <button class="button is-success" onclick="toggleCustomForm()">Toggle Custom Profile Form</button>
             
-            <div id="customProfileForm" class="box has-background-grey-darker mt-4" style="display: none;">
+            <div id="customProfileForm" class="box has-background-grey-darker mt-4" style="display: block;">
                 <form id="customPrinterForm">
                     <div class="columns">
                         <div class="column is-6">
@@ -55,6 +73,18 @@
                                 <div class="control">
                                     <input class="input" type="text" name="manufacturer" required>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="columns">
+                        <div class="column is-12">
+                            <div class="field">
+                                <label class="label has-text-white">Printer IP Address</label>
+                                <div class="control">
+                                    <input class="input" type="text" name="ip_address" placeholder="192.168.1.100" pattern="^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$" title="Enter a valid IP address (e.g., 192.168.1.100)">
+                                </div>
+                                <p class="help has-text-light">IP address for connecting to Fluidd/Mainsail interface</p>
                             </div>
                         </div>
                     </div>
@@ -137,6 +167,9 @@
                         <div class="card-content">
                             <h3 class="title is-5 has-text-white">{{ printer.data.name }}</h3>
                             <p class="has-text-light">{{ printer.data.manufacturer }}</p>
+                            {% if printer.data.ip_address %}
+                            <p class="has-text-info is-size-7">{{ printer.data.ip_address }}</p>
+                            {% endif %}
                             <div class="tags">
                                 <span class="tag is-primary">{{ printer.data.bed_size[0] }}x{{ printer.data.bed_size[1] }}x{{ printer.data.bed_size[2] }}mm</span>
                                 <span class="tag is-info">{{ printer.data.nozzle_size }}mm nozzle</span>
@@ -197,8 +230,39 @@ function toggleCustomForm() {
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
 
+function updateIpIndicator(profileIndex) {
+    const ipInput = document.getElementById(`prebuilt-ip-${profileIndex}`);
+    const card = ipInput.closest('.card');
+    
+    // Remove existing indicator
+    const existingIndicator = card.querySelector('.control.has-icons-right .icon');
+    if (existingIndicator) {
+        existingIndicator.remove();
+    }
+    
+    // Add indicator if IP is entered
+    if (ipInput.value.trim()) {
+        const control = ipInput.parentElement;
+        control.classList.add('has-icons-right');
+        
+        const indicator = document.createElement('span');
+        indicator.className = 'icon is-small is-right has-text-success';
+        indicator.innerHTML = '<i class=\"fas fa-check\"></i>';
+        control.appendChild(indicator);
+    }
+}
+
 function continueSetup() {
     if (selectedProfile !== null && selectedType !== null) {
+        // Get IP address if it's a prebuilt profile
+        let ipAddress = '';
+        if (selectedType === 'prebuilt') {
+            const ipInput = document.getElementById(`prebuilt-ip-${selectedProfile}`);
+            if (ipInput) {
+                ipAddress = ipInput.value.trim();
+            }
+        }
+        
         // Convert index to number and save the selected printer
         fetch('/save_printer_selection', {
             method: 'POST',
@@ -207,7 +271,8 @@ function continueSetup() {
             },
             body: JSON.stringify({
                 index: parseInt(selectedProfile),
-                type: selectedType
+                type: selectedType,
+                ip_address: ipAddress
             })
         })
         .then(response => response.json())
@@ -233,6 +298,7 @@ document.getElementById('customPrinterForm').addEventListener('submit', function
     const printerData = {
         name: formData.get('name'),
         manufacturer: formData.get('manufacturer'),
+        ip_address: formData.get('ip_address'),
         bed_size: [
             parseInt(formData.get('bed_width')),
             parseInt(formData.get('bed_depth')),

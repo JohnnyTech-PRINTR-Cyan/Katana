@@ -19,6 +19,7 @@ PRINTER_PROFILE_SCHEMA = {
     "properties": {
         "name": {"type": "string", "minLength": 1, "maxLength": 100},
         "manufacturer": {"type": "string", "minLength": 1, "maxLength": 100},
+        "ip_address": {"type": "string", "pattern": "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"},
         "bed_size": {
             "type": "array",
             "items": {"type": "number", "minimum": 50, "maximum": 1000},
@@ -162,6 +163,22 @@ def validate_printer_profiles_file(file_path: str) -> bool:
             raise
         raise ValidationError(f"Failed to validate file: {str(e)}")
 
+def validate_ip_address(ip_address: str) -> str:
+    """Validate IP address format"""
+    if not ip_address or not isinstance(ip_address, str):
+        return ""  # IP address is optional
+    
+    ip_address = ip_address.strip()
+    if not ip_address:
+        return ""  # Empty IP address is allowed
+    
+    # Basic IP address validation using regex
+    ip_pattern = r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+    if not re.match(ip_pattern, ip_address):
+        raise ValidationError("Invalid IP address format. Use format: 192.168.1.100")
+    
+    return ip_address
+
 def validate_printer_name(name: str) -> str:
     """Validate printer name"""
     if not name or not isinstance(name, str):
@@ -281,6 +298,9 @@ def validate_printer_profile(profile_data: Dict[str, Any]) -> Dict[str, Any]:
     # Validate required fields
     validated['name'] = validate_printer_name(profile_data.get('name', ''))
     validated['manufacturer'] = validate_manufacturer(profile_data.get('manufacturer', ''))
+    
+    # Validate IP address (optional)
+    validated['ip_address'] = validate_ip_address(profile_data.get('ip_address', ''))
     
     # Validate bed dimensions
     bed_size = profile_data.get('bed_size', [])

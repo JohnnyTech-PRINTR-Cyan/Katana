@@ -2,9 +2,7 @@ import flask
 from flask import *
 from version import *
 from configmanager import *
-from validators import ValidationError, validate_printer_profile, validate_selection_data
-import os
-
+from validators import ValidationError, validate_printer_profile, validate_selection_data, validate_ip_address
 app = Flask(__name__)
 config = ConfigManager()
 
@@ -15,6 +13,7 @@ def load():
         return render_template('index.html', version=v, page_title="Katana")
     else:
         return render_template('welcomeflow.html', version=v, page_title="Katana")
+    
 
 @app.route('/welcome')
 def welcome():
@@ -84,6 +83,9 @@ def save_printer_selection():
         # Validate selection data
         index, profile_type = validate_selection_data(data)
         
+        # Get IP address if provided (for prebuilt profiles)
+        ip_address = data.get('ip_address', '').strip()
+        
         # Load current config and printer profiles
         config.load_config("config.json")
         config.load_printer_profiles("printers/printer-settings.json")
@@ -94,7 +96,16 @@ def save_printer_selection():
             profiles = config.get_printer_profiles()
             if index >= len(profiles):
                 return jsonify({"success": False, "error": "Invalid profile index"})
-            profile_data = profiles[index]
+            profile_data = profiles[index].copy()  # Make a copy to modify
+            
+            # Update IP address if provided
+            if ip_address:
+                # Validate IP address
+                validated_ip = validate_ip_address(ip_address)
+                profile_data['ip_address'] = validated_ip
+            else:
+                profile_data['ip_address'] = ''
+                
         elif profile_type == 'saved':
             # Get saved profile by index
             saved_printers = config.get_saved_printers()
@@ -117,7 +128,5 @@ def save_printer_selection():
     except Exception as e:
         return jsonify({"success": False, "error": "Internal server error"})
     
-@app.route("/teapot")
-def teapot():
-    return error(418)
+
 print("DO NOT RUN THIS SCRIPT DIRECTLY! USE main.py TO RUN KATANA!")
